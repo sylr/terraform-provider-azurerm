@@ -31,8 +31,16 @@ func dataSourceArmNetworkSecurityGroup() *schema.Resource {
 			"location": azure.SchemaLocationForDataSource(),
 
 			"security_rule": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:       schema.TypeSet,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Optional:   true,
+				Computed:   true,
+				// Set: func(v interface{}) int {
+				// 	m := v.(map[string]interface{})
+				// 	id := fmt.Sprintf("%s-%d", m["direction"].(string), m["priority"].(int))
+				// 	log.Printf("[DEBUG] pwet %s %d", id, hashcode.String(id))
+				// 	return hashcode.String(id)
+				// },
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {

@@ -1,7 +1,9 @@
 package network
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"time"
 
@@ -59,6 +61,12 @@ func resourceArmNetworkSecurityGroup() *schema.Resource {
 				ConfigMode: schema.SchemaConfigModeAttr,
 				Optional:   true,
 				Computed:   true,
+				// Set: func(v interface{}) int {
+				// 	m := v.(map[string]interface{})
+				// 	id := fmt.Sprintf("%s-%d", m["direction"].(string), m["priority"].(int))
+				// 	log.Printf("[DEBUG] pwet %s %d", id, hashcode.String(id))
+				// 	return hashcode.String(id)
+				// },
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -302,7 +310,14 @@ func resourceArmNetworkSecurityGroupDelete(d *schema.ResourceData, meta interfac
 
 func expandAzureRmSecurityRules(d *schema.ResourceData) ([]network.SecurityRule, error) {
 	sgRules := d.Get("security_rule").(*schema.Set).List()
-	rules := make([]network.SecurityRule, 0)
+
+	j, _ := json.Marshal(sgRules)
+	log.Printf("[DEBUG] before sortSecurityRulesInterfaces sorting: %v", j)
+	sortSecurityRulesInterfaces(sgRules)
+	j2, _ := json.Marshal(sgRules)
+	log.Printf("[DEBUG] after sortSecurityRulesInterfaces sorting: %v", j2)
+
+	rules := make([]network.SecurityRule, 0, len(sgRules))
 
 	for _, sgRaw := range sgRules {
 		sgRule := sgRaw.(map[string]interface{})
@@ -404,6 +419,7 @@ func expandAzureRmSecurityRules(d *schema.ResourceData) ([]network.SecurityRule,
 }
 
 func flattenNetworkSecurityRules(rules *[]network.SecurityRule) []map[string]interface{} {
+	log.Printf("[DEBUG] pwet rules len: %v", len(*rules))
 	result := make([]map[string]interface{}, 0)
 
 	if rules != nil {
@@ -469,19 +485,52 @@ func flattenNetworkSecurityRules(rules *[]network.SecurityRule) []map[string]int
 		}
 	}
 
+	j, err := json.MarshalIndent(result, "", "  ")
+	log.Printf("[DEBUG] before sortSecurityRules sorting: %v (err: %v)", string(j), err)
 	sortSecurityRules(result)
+	j2, err := json.MarshalIndent(result, "", "  ")
+	log.Printf("[DEBUG] after sortSecurityRules sorting: %v (err: %v)", string(j2), err)
 
 	return result
 }
 
 func sortSecurityRules(rules []map[string]interface{}) {
+	log.Printf("[DEBUG] pwet sort")
+
 	sort.SliceStable(rules, func(i, j int) bool {
-		if rules[i]["direction"].(string) < rules[j]["direction"].(string) &&
-			rules[i]["priority"].(string) < rules[j]["priority"].(string) {
+		idir := rules[i]["direction"].(string)
+		jdir := rules[j]["direction"].(string)
+		ipri := rules[i]["priority"].(int)
+		jpri := rules[j]["priority"].(int)
+
+		if idir < jdir {
 			return true
 		}
 
-		return false
+		if idir > jdir {
+			return false
+		}
+
+		return ipri < jpri
+	})
+}
+
+func sortSecurityRulesInterfaces(rules interface{}) {
+	sort.SliceStable(rules.([]interface{}), func(i, j int) bool {
+		idir := rules.([]interface{})[i].(map[string]interface{})["direction"].(string)
+		jdir := rules.([]interface{})[j].(map[string]interface{})["direction"].(string)
+		ipri := rules.([]interface{})[i].(map[string]interface{})["priority"].(int)
+		jpri := rules.([]interface{})[j].(map[string]interface{})["priority"].(int)
+
+		if idir < jdir {
+			return true
+		}
+
+		if idir > jdir {
+			return false
+		}
+
+		return ipri < jpri
 	})
 }
 
