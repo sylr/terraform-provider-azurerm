@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
@@ -468,7 +469,20 @@ func flattenNetworkSecurityRules(rules *[]network.SecurityRule) []map[string]int
 		}
 	}
 
+	sortSecurityRules(result)
+
 	return result
+}
+
+func sortSecurityRules(rules []map[string]interface{}) {
+	sort.SliceStable(rules, func(i, j int) bool {
+		if rules[i]["direction"].(string) < rules[j]["direction"].(string) &&
+			rules[i]["priority"].(string) < rules[j]["priority"].(string) {
+			return true
+		}
+
+		return false
+	})
 }
 
 func validateSecurityRule(sgRule map[string]interface{}) error {

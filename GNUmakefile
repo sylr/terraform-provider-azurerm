@@ -21,7 +21,10 @@ tools:
 	GO111MODULE=off go get -u github.com/katbyte/terrafmt
 
 build: fmtcheck
-	go install
+	go install -mod=vendor
+
+quickdev:
+	go install -gcflags="all=-N -l" -mod=vendor
 
 build-docker:
 	mkdir -p bin
@@ -127,4 +130,4 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build build-docker test test-docker testacc vet fmt fmtcheck errcheck test-compile website website-test
+.PHONY: build quickdev build-docker test test-docker testacc vet fmt fmtcheck errcheck test-compile website website-test
