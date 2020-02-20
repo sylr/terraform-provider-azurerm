@@ -64,7 +64,7 @@ func resourceArmNetworkSecurityGroup() *schema.Resource {
 				// Set: func(v interface{}) int {
 				// 	m := v.(map[string]interface{})
 				// 	id := fmt.Sprintf("%s-%d", m["direction"].(string), m["priority"].(int))
-				// 	log.Printf("[DEBUG] pwet %s %d", id, hashcode.String(id))
+				// 	log.Printf("[INFO] pwet %s %d", id, hashcode.String(id))
 				// 	return hashcode.String(id)
 				// },
 				Elem: &schema.Resource{
@@ -419,7 +419,7 @@ func expandAzureRmSecurityRules(d *schema.ResourceData) ([]network.SecurityRule,
 }
 
 func flattenNetworkSecurityRules(rules *[]network.SecurityRule) []map[string]interface{} {
-	log.Printf("[DEBUG] pwet rules len: %v", len(*rules))
+	log.Printf("[INFO] pwet rules len: %v", len(*rules))
 	result := make([]map[string]interface{}, 0)
 
 	if rules != nil {
@@ -485,17 +485,17 @@ func flattenNetworkSecurityRules(rules *[]network.SecurityRule) []map[string]int
 		}
 	}
 
-	j, err := json.MarshalIndent(result, "", "  ")
-	log.Printf("[DEBUG] before sortSecurityRules sorting: %v (err: %v)", string(j), err)
+	j, err := json.MarshalIndent(result, "[INFO] ", "  ")
+	log.Printf("[INFO] before sortSecurityRules sorting: %v (err: %v)", string(j), err)
 	sortSecurityRules(result)
-	j2, err := json.MarshalIndent(result, "", "  ")
-	log.Printf("[DEBUG] after sortSecurityRules sorting: %v (err: %v)", string(j2), err)
+	j2, err := json.MarshalIndent(result, "[INFO] ", "  ")
+	log.Printf("[INFO] after sortSecurityRules sorting: %v (err: %v)", string(j2), err)
 
 	return result
 }
 
 func sortSecurityRules(rules []map[string]interface{}) {
-	log.Printf("[DEBUG] pwet sort")
+	log.Printf("[INFO] pwet sort")
 
 	sort.SliceStable(rules, func(i, j int) bool {
 		idir := rules[i]["direction"].(string)
